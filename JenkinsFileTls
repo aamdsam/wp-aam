@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+    environment {
+        KUBE_CONTEXT = 'your-kube-context'  // Kube context if you have multiple clusters
+        KUBERNETES_NAMESPACE = 'default'  // Replace with your namespace
+        TLS_SECRET_NAME = 'aam-tls' // Nama TLS Secret
+    }
+    stages {
+        stage('Check Secret and Ingress') {
+            steps {
+                script {
+                    // Periksa keberadaan Secret
+                    def secretExists = sh(
+                        script: "kubectl get secret $TLS_SECRET_NAME -o jsonpath='{.metadata.name}'",
+                        returnStdout: true
+                    ).trim()
+                    
+                    if (secretExists != TLS_SECRET_NAME) {
+                        error "Secret $TLS_SECRET_NAME tidak ditemukan!"
+                    }
+
+                    // Periksa isi Secret
+                    sh "kubectl describe secret $TLS_SECRET_NAME"
+
+                    // Tampilkan detail sertifikat
+                    sh "kubectl get secret $TLS_SECRET_NAME -o jsonpath='{.data.tls\\.crt}' | base64 -d | openssl x509 -text -noout"
+
+                    // Periksa apakah Ingress menggunakan Secret
+                    def ingressUsesSecret = sh(
+                        script: "kubectl get ingress aam-ingress -o jsonpath='{.spec.tls[0].secretName}'",
+                        returnStdout: true
+                    ).trim()
+                    
+                    if (ingressUsesSecret != TLS_SECRET_NAME) {
+                        error "Ingress aam-ingress tidak menggunakan Secret $TLS_SECRET_NAME!"
+                    }
+                }
+            }
+        }
+        stage('Test HTTPS Connection') {
+            steps {
+                script {
+                    // Cek akses HTTPS ke domain
+                    def domain = "https://devops-aam.dsam.web.id"
+                    def curlOutput = sh(
+                        script: "curl -k -o /dev/null -s -w '%{http_code}' $domain",
+                        returnStdout: true
+                    ).trim()
+
+                    if (curlOutput != '200') {
+                        error "Akses ke $domain tidak berhasil! Status: $curlOutput"
+                    }
+
+                    echo "HTTPS ke $domain berhasil!"
+                }
+            }
+        }
+    }
+}
