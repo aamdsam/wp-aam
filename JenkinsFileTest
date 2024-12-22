@@ -2,16 +2,17 @@ pipeline {
     agent any
     environment {
         KUBE_CONTEXT = 'your-kube-context'  // Kube context if you have multiple clusters
-        KUBERNETES_NAMESPACE = 'default'  // Replace with your namespace
+        KUBERNETES_NAMESPACE = 'wordpress'  // Replace with your namespace
     }
 
     stages {
         stage('Get Kubernetes Resources') {
             steps {
                 script {
-                    sh 'kubectl get ingress aam-ingress -n default -o wide'
-                    sh 'kubectl get service aam-service -n default'
-                    sh 'kubectl get pods -n default'
+                    sh "kubectl get ingress wordpress-ingress -n ${KUBERNETES_NAMESPACE} -o wide"
+                    sh "kubectl get service wordpress-service -n ${KUBERNETES_NAMESPACE}"
+                    sh "kubectl get service mysql-service -n ${KUBERNETES_NAMESPACE}"
+                    sh "kubectl get pods -l app=wordpress -n${KUBERNETES_NAMESPACE}"
                 }
             }
         }
@@ -19,9 +20,10 @@ pipeline {
         stage('Exec into Pod and Curl') {
             steps {
                 script {
-                    def podName = sh(script: "kubectl get pods -n default -o jsonpath='{.items[0].metadata.name}'", returnStdout: true).trim()
+                    def podName = sh(script: "kubectl get pods -l app=wordpress -n ${KUBERNETES_NAMESPACE} -o jsonpath='{.items[0].metadata.name}'", returnStdout: true).trim()
                     echo "Executing curl inside pod: ${podName}"
-                    sh "kubectl exec -it ${podName} -n default -- curl http://aam-service:80"
+                    sh "kubectl describe pod ${podName} -n wordpress"
+                    sh "kubectl exec -it ${podName} -n ${KUBERNETES_NAMESPACE} -- curl http://wordpress-service:80"
                 }
             }
         }

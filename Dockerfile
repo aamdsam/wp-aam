@@ -1,10 +1,15 @@
-FROM nginx:latest
+FROM wordpress:latest
 
-# Copy the HTML file to NGINX root directory
-COPY index.html /usr/share/nginx/html/index.html
+ENV WORDPRESS_DB_HOST=mysql.default.svc.cluster.local \
+    WORDPRESS_DB_USER=mysql_user \
+    WORDPRESS_DB_PASSWORD=mysql_pass \
+    WORDPRESS_DB_NAME=db_wp_aam
 
-# Expose ports 80 and 443 for HTTP and HTTPS
+COPY ./wordpress /var/www/html
+
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
 EXPOSE 80 443
 
-# Start NGINX server
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["apache2-foreground"]

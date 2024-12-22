@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mysql
-  namespace: default
+  namespace: wordpress
 spec:
   replicas: 1
   selector:
@@ -38,9 +38,6 @@ spec:
               name: mysql-secret
               key: mysql-password
         resources:
-          requests:
-            cpu: "500m"
-            memory: "512Mi"
           limits:
             cpu: "1500m"
             memory: "512Mi"
