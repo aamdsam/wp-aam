@@ -9,7 +9,7 @@ spec:
     targetPort: 3306
   selector:
     app: aam-mysql-deployment
-  type: ClusterIP
+  type: LoadBalancer
 
 ---
 apiVersion: v1
