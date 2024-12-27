@@ -31,8 +31,8 @@ pipeline {
                     def podName = sh(script: "kubectl get pods -l app=aam-wp-deployment -n ${KUBERNETES_NAMESPACE} -o jsonpath='{.items[0].metadata.name}'", returnStdout: true).trim()
                     echo "Executing curl inside pod: ${podName}"
                     sh "kubectl describe pod ${podName} -n ${KUBERNETES_NAMESPACE}"
-                    sh "kubectl exec -it ${podName} -n ${KUBERNETES_NAMESPACE} -- curl http://aam-wp-service:80"
-                    sh "kubectl exec -it ${podName} -n ${KUBERNETES_NAMESPACE} -- curl http://localhost:80"
+                    sh "kubectl exec ${podName} -n ${KUBERNETES_NAMESPACE} -- curl http://aam-wp-service:80"
+                    sh "kubectl exec ${podName} -n ${KUBERNETES_NAMESPACE} -- curl http://localhost:80"
                     
                 }
             }
