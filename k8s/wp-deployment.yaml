@@ -1,50 +1,53 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wordpress
-  namespace: wordpress
+  name: aam-wp-deployment
+  namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: wordpress
+      app: aam-wp-deployment
   template:
     metadata:
       labels:
-        app: wordpress
+        app: aam-wp-deployment
     spec:
       containers:
-      - name: wordpress
+      - name: aam-wp-container
         image: aamdsam/wordpress-aam:latest
         ports:
           - containerPort: 80
           - containerPort: 443
         env:
           - name: WORDPRESS_DB_HOST
-            value: "mysql.wordpress.svc.cluster.local"
+            value: "aam-mysql-service.default.svc.cluster.local"
           - name: WORDPRESS_DB_USER
             valueFrom:
               secretKeyRef:
-                name: mysql-secret
+                name: aam-mysql-secret
                 key: mysql-user
           - name: WORDPRESS_DB_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: mysql-secret
+                name: aam-mysql-secret
                 key: mysql-password
           - name: WORDPRESS_DB_NAME
             valueFrom:
               secretKeyRef:
-                name: mysql-database
+                name: aam-mysql-secret
                 key: mysql-database
         volumeMounts:
           - name: wordpress-data
             mountPath: /var/www/html
         resources:
+          requests:
+            cpu: "100m"
+            memory: "512Mi"
           limits:
-            cpu: "1500m"
+            cpu: 1
             memory: "512Mi"
       volumes:
         - name: wordpress-data
           persistentVolumeClaim:
-            claimName: wordpress-pvc
+            claimName: aam-wp-pvc

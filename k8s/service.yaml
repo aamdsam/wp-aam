@@ -1,25 +1,25 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-service
-  namespace: wordpress
+  name: aam-mysql-service
+  namespace: default
 spec:
   ports:
   - port: 3306
     targetPort: 3306
   selector:
-    app: mysql
+    app: aam-mysql-deployment
   type: ClusterIP
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: wordpress-service
-  namespace: wordpress
+  name: aam-wp-service
+  namespace: default
 spec:
   selector:
-    app: wordpress
+    app: aam-wp-deployment
   ports:
     - name: http
       port: 80

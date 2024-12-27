@@ -1,0 +1,205 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: aam-mysql-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: aam-wp-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aam-mysql-secret
+  namespace: default
+type: Opaque
+data:
+  mysql-root-password: cGFzc3dvcmQ=        # base64 dari "password"
+  mysql-database: d29yZHByZXNz             # base64 dari "wordpress"
+  mysql-user: dXNlcm5hbWU=                 # base64 dari "username"
+  mysql-password: cGFzc3dvcmQ=             # base64 dari "password"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aam-mysql-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aam-mysql-deployment
+  template:
+    metadata:
+      labels:
+        app: aam-mysql-deployment
+    spec:
+      containers:
+      - name: aam-mysql-container
+        image: mysql:8.0
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: aam-mysql-secret
+              key: mysql-root-password
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: aam-mysql-secret
+              key: mysql-database
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: aam-mysql-secret
+              key: mysql-user
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: aam-mysql-secret
+              key: mysql-password
+        resources:
+          requests:
+            cpu: "1500m"
+            memory: "512Mi"
+          limits:
+            cpu: "1500m"
+            memory: "512Mi"
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: aam-mysql-pvc
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aam-wp-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aam-wp-deployment
+  template:
+    metadata:
+      labels:
+        app: aam-wp-deployment
+    spec:
+      containers:
+      - name: aam-wp-container
+        image: aamdsam/wordpress-aam:latest
+        ports:
+          - containerPort: 80
+          - containerPort: 443
+        env:
+          - name: WORDPRESS_DB_HOST
+            value: "aam-mysql-service.default.svc.cluster.local"
+          - name: WORDPRESS_DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: aam-mysql-secret
+                key: mysql-user
+          - name: WORDPRESS_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: aam-mysql-secret
+                key: mysql-password
+          - name: WORDPRESS_DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: aam-mysql-secret
+                key: mysql-database
+        volumeMounts:
+          - name: wordpress-data
+            mountPath: /var/www/html
+        resources:
+          requests:
+            cpu: "1500m"
+            memory: "512Mi"
+          limits:
+            cpu: "1500m"
+            memory: "512Mi"
+      volumes:
+        - name: wordpress-data
+          persistentVolumeClaim:
+            claimName: aam-wp-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aam-mysql-service
+  namespace: default
+spec:
+  ports:
+  - port: 3306
+    targetPort: 3306
+  selector:
+    app: aam-mysql-deployment
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aam-wp-service
+  namespace: default
+spec:
+  selector:
+    app: aam-wp-deployment
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 443
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aam-wp-ingress
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+spec:
+  rules:
+    - host: aam-wp.dsam.web.id
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: aam-wp-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - aam-wp.dsam.web.id
+      secretName: aam-tls

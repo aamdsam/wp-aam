@@ -4,7 +4,7 @@ pipeline {
         // Define your Docker Hub credentials and image name here
         DOCKER_IMAGE = 'aamdsam/wordpress-aam:latest' // Image name
         KUBE_CONTEXT = 'your-kube-context'  // Kube context if you have multiple clusters
-        KUBERNETES_NAMESPACE = 'wordpress'  // Replace with your namespace
+        KUBERNETES_NAMESPACE = 'default'  // Replace with your namespace
     }
     stages {
         stage('Checkout') {
@@ -35,6 +35,9 @@ pipeline {
                 script {
                     // Deploy to Kubernetes using kubectl
                     sh '''
+                        kubectl delete -f k8s/wp-deployment.yaml -n $KUBERNETES_NAMESPACE
+                        kubectl delete -f k8s/mysql-deployment.yaml -n $KUBERNETES_NAMESPACE
+                        
                         kubectl apply -f k8s/wp-deployment.yaml -n $KUBERNETES_NAMESPACE
                         kubectl apply -f k8s/mysql-deployment.yaml -n $KUBERNETES_NAMESPACE
                         kubectl apply -f k8s/secret.yaml -n $KUBERNETES_NAMESPACE
@@ -50,8 +53,8 @@ pipeline {
                 script {
                     // Deploy to Kubernetes using kubectl
                     sh '''
-                        kubectl rollout restart deployment/wordpress -n $KUBERNETES_NAMESPACE
-                        kubectl rollout restart deployment/mysql -n $KUBERNETES_NAMESPACE
+                        kubectl rollout restart deployment/aam-wp-deployment -n $KUBERNETES_NAMESPACE
+                        kubectl rollout restart deployment/aam-mysql-deployment -n $KUBERNETES_NAMESPACE
                     '''
                 }
             }

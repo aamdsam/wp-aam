@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mysql-pvc
-  namespace: wordpress
+  name: aam-mysql-pvc
+  namespace: default
 spec:
   accessModes:
     - ReadWriteOnce
@@ -14,8 +14,8 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: wordpress-pvc
-  namespace: wordpress
+  name: aam-wp-pvc
+  namespace: default
 spec:
   accessModes:
     - ReadWriteOnce
