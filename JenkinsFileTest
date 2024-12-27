@@ -15,6 +15,7 @@ pipeline {
                     // sh "kubectl rollout restart deployment aam-wp-deployment -n${KUBERNETES_NAMESPACE}"
                     // sh "kubectl rollout status deployment aam-mysql-deployment -n${KUBERNETES_NAMESPACE}"
                     
+                    sh "kubectl get endpoints aam-wp-service -n ${KUBERNETES_NAMESPACE}"
                     sh "kubectl get ingress aam-wp-ingress -n ${KUBERNETES_NAMESPACE} -o wide"
                     sh "kubectl get service aam-wp-service -n ${KUBERNETES_NAMESPACE}"
                     sh "kubectl get service aam-mysql-service -n ${KUBERNETES_NAMESPACE}"
@@ -31,6 +32,8 @@ pipeline {
                     echo "Executing curl inside pod: ${podName}"
                     sh "kubectl describe pod ${podName} -n ${KUBERNETES_NAMESPACE}"
                     sh "kubectl exec -it ${podName} -n ${KUBERNETES_NAMESPACE} -- curl http://aam-wp-service:80"
+                    sh "kubectl exec -it ${podName} -n ${KUBERNETES_NAMESPACE} -- curl http://localhost:80"
+                    
                 }
             }
         }
