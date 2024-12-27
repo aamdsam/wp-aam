@@ -56,7 +56,7 @@ pipeline {
                     sh '''
                         kubectl rollout restart deployment/aam-wp-deployment -n $KUBERNETES_NAMESPACE
                         kubectl rollout restart deployment/aam-mysql-deployment -n $KUBERNETES_NAMESPACE
-                        kubectl rollout restart ingress/aam-aam-wp-ingress -n $KUBERNETES_NAMESPACE
+                        kubectl rollout restart ingress/aam-wp-ingress -n $KUBERNETES_NAMESPACE
                     '''
                 }
             }
