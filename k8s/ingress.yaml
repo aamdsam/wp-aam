@@ -7,6 +7,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
   rules:
     - host: aam-wp.dsam.web.id
@@ -18,8 +19,4 @@ spec:
               service:
                 name: aam-wp-service
                 port:
-                  number: 443
-  tls:
-    - hosts:
-        - aam-wp.dsam.web.id
-      secretName: aam-tls
+                  number: 80
