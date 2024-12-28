@@ -18,7 +18,7 @@ spec:
               service:
                 name: aam-wp-service
                 port:
-                  number: 80
+                  number: 443
   tls:
     - hosts:
         - aam-wp.dsam.web.id
