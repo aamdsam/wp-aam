@@ -37,7 +37,7 @@ pipeline {
                     sh '''
                         kubectl delete -f k8s/wp-deployment.yaml -n $KUBERNETES_NAMESPACE
                         kubectl delete -f k8s/mysql-deployment.yaml -n $KUBERNETES_NAMESPACE
-                        kubectl delete -f k8s/ingress.yaml -n $KUBERNETES_NAMESPACE
+                        kubectl delete -f k8s/ingress.yaml -n $KUBERNETES_NAMESPACEs
 
                         echo "Sleeping for 10 seconds..."
                         sleep 10
